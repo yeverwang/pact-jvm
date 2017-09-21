@@ -1,9 +1,15 @@
 package au.com.dius.pact.consumer
 
+import java.net.SocketException
+
 import au.com.dius.pact.model.{Pact, PactSpecVersion}
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  * @deprecated Moved to Kotlin implementation
+  */
+@Deprecated
 object ConsumerPactRunner {
   
   def writeIfMatching(pact: Pact, results: PactSessionResults, pactVersion: PactSpecVersion): VerificationResult =
@@ -16,12 +22,16 @@ object ConsumerPactRunner {
     VerificationResult(tryResults)
   }
   
-  def runAndWritePact[T](pact: Pact, pactVersion: PactSpecVersion = PactSpecVersion.V2)(userCode: => T, userVerification: ConsumerTestVerification[T]): VerificationResult = {
+  def runAndWritePact[T](pact: Pact, pactVersion: PactSpecVersion = PactSpecVersion.V3)(userCode: => T, userVerification: ConsumerTestVerification[T]): VerificationResult = {
     val server = DefaultMockProvider.withDefaultConfig(pactVersion)
     new ConsumerPactRunner(server).runAndWritePact(pact, pactVersion)(userCode, userVerification)
   }
 }
 
+/**
+  * @deprecated Moved to Kotlin implementation
+  */
+@Deprecated
 class ConsumerPactRunner(server: MockProvider) {
   import ConsumerPactRunner._
   
@@ -29,7 +39,8 @@ class ConsumerPactRunner(server: MockProvider) {
     val tryResults = server.runAndClose(pact)(userCode)
     tryResults match {
       case Failure(e) =>
-        if (server.session.remainingResults.allMatched) PactError(e)
+        if (e.isInstanceOf[SocketException]) PactError(new MockServerException("Failed to start mock server: " + e.getMessage, e))
+        else if (server.session.remainingResults.allMatched) PactError(e)
         else PactMismatch(server.session.remainingResults, Some(e))
       case Success((codeResult, pactSessionResults)) =>
         userVerification(codeResult).fold(writeIfMatching(pact, pactSessionResults, pactVersion)) { error =>

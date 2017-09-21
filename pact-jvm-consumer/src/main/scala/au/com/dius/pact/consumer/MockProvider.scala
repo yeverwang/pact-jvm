@@ -16,13 +16,14 @@ trait MockProvider {
 
 object DefaultMockProvider {
   
-  def withDefaultConfig(pactVersion: PactSpecVersion = PactSpecVersion.V2) = apply(MockProviderConfig.createDefault(pactVersion))
+  def withDefaultConfig(pactVersion: PactSpecVersion = PactSpecVersion.V3) = apply(MockProviderConfig.createDefault(pactVersion))
   
   // Constructor providing a default implementation of StatefulMockProvider.
   // Users should not explicitly be forced to choose a variety.
   def apply(config: MockProviderConfig): StatefulMockProvider =
     config match {
       case httpsConfig: MockHttpsProviderConfig => new UnfilteredHttpsMockProvider(httpsConfig)
+      case httpsKeystoreConfig: MockHttpsKeystoreProviderConfig => new UnfilteredHttpsKeystoreMockProvider(httpsKeystoreConfig)
       case _ => new UnfilteredMockProvider(config)
     }
 }

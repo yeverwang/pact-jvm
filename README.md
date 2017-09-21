@@ -5,8 +5,7 @@ pact-jvm
 
 [![Build Status](https://travis-ci.org/DiUS/pact-jvm.svg?branch=master)](https://travis-ci.org/DiUS/pact-jvm)
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/172049m2sa57takc?svg=true)](https://ci.appveyor.com/project/uglyog/pact-jvm)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-logging_2.11/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-logging_2.11)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-consumer_2.11/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-consumer_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-model/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-model)
 
 JVM implementation of the consumer driven contract library [pact](https://github.com/bethesque/pact_specification).
 
@@ -30,8 +29,8 @@ how to get going.
 ## Contact
 
 * Twitter: [@pact_up](https://twitter.com/pact_up)
-* Google users group: https://groups.google.com/forum/#!forum/pact-support
 * Gitter: [![Join the chat at https://gitter.im/DiUS/pact-jvm](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/DiUS/pact-jvm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* Stack Overflow: https://stackoverflow.com/questions/tagged/pact
 
 ## Links
 
@@ -40,28 +39,21 @@ how to get going.
 ## Documentation
 
 Additional documentation can be found at [docs.pact.io](http://docs.pact.io), in the [Pact Wiki](https://github.com/realestate-com-au/pact/wiki),
-and in the [Pact-JVM wiki](https://github.com/DiUS/pact-jvm/wiki).
+and in the [Pact-JVM wiki](https://github.com/DiUS/pact-jvm/wiki). [Stack Overflow](https://stackoverflow.com/questions/tagged/pact) is also a good source of help.
 
 ## Note about artifact names and versions
 
-Pact-JVM is partially written in Scala. As Scala does not provide binary compatibility between major versions, all the Pact-JVM
+Pact-JVM is partially written in Scala. As Scala does not provide binary compatibility between major versions, most of the Pact-JVM
 artifacts have the version of Scala they were built with in the artifact name. So, for example, the pact-jvm-consumer-junit
-module has a Jar file named pact-jvm-consumer_2.10. The full name of the file is pact-jvm-consumer_2.10-2.0.x.jar.
+module has a Jar file named pact-jvm-consumer_2.12. The full name of the file is pact-jvm-consumer_2.12-3.5.x.jar.
 
-### 3.x branch [![Maven Central](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-consumer_2.11/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-consumer_2.11)
+## Supported JDK and specification versions: 
 
-3.x branch drops support for JDK 6 and 7 as well as Scala 2.10. It will be cross-compiled with Scala 2.12 when that is
-released, but is currently build against Scala 2.11. All Groovy code is compiled with Invoke Dynamic instruction turned
-on (indy version).
-
-3.2.x/3.3.x versions implement the V2 pact spec, while the 3.5.x versions implement the V3 spec.
-
-### 2.x branch [![Maven Central](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-logging_2.11/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/au.com.dius/pact-jvm-logging_2.11)
-
-2.x versions of pact support JDK 6 and Scala 2.10. We currently cross-compile all the artifacts against 2.10 and
-2.11 versions of Scala, except for the SBT modules.
-
-2.4.x versions implement the V2 pact spec, while the 2.5.x versions implement the V3 spec.
+| Branch | Specification | Min JDK | Scala Versions | Latest Version |
+| ------ | ------------- | ------- | -------------- | -------------- |
+| 3.5.x | V3 | 8 | 2.12, 2.11 | 3.5.5 |
+| 3.5.x-jre7 | V3 | 7 | 2.11 | 3.5.5-jre7.0 |
+| 2.4.x (v2.x) | V2 | 6 | 2.10, 2.11 | 2.4.19 |
 
 ## Service Consumers
 
@@ -138,6 +130,7 @@ You want to look at: [pact-jvm-provider](pact-jvm-provider)
 
 As part of the V3 pact specification, we have defined a new pact file for interactions with message queues. The Gradle
 pact plugin supports a mechanism where you can verify V3 message pacts, have a look at [pact gradle plugin](pact-jvm-provider-gradle#verifying-a-message-provider).
+The JUnit pact library also supports verification of V3 message pacts, have a look at [pact-jvm-provider-junit](pact-jvm-provider-junit#verifying-a-message-provider).
 
 ### I Use Ruby or Go or something else
 The pact-jvm libraries are pure jvm technologies and do not have any native dependencies.

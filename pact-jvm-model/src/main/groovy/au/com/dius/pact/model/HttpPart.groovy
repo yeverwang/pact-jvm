@@ -1,16 +1,18 @@
 package au.com.dius.pact.model
 
+import au.com.dius.pact.model.matchingrules.MatchingRules
+
 /**
  * Base trait for an object that represents part of an http message
  */
-trait HttpPart {
+abstract class HttpPart {
 
   private static final String CONTENT_TYPE = 'Content-Type'
 
   abstract OptionalBody getBody()
   abstract Map<String, String> getHeaders()
   abstract void setHeaders(Map<String, String> headers)
-  abstract Map<String, Map<String, Object>> getMatchingRules()
+  abstract MatchingRules getMatchingRules()
 
   String mimeType() {
     def contentTypeKey = headers?.keySet()?.find { CONTENT_TYPE.equalsIgnoreCase(it) }
@@ -23,6 +25,10 @@ trait HttpPart {
 
   boolean jsonBody() {
     mimeType().matches('application\\/.*json')
+  }
+
+  boolean xmlBody() {
+    mimeType().matches('application\\/.*xml')
   }
 
   static final XMLREGEXP = /^\s*<\?xml\s*version.*/

@@ -2,6 +2,11 @@ package au.com.dius.pact.consumer
 
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody
 import au.com.dius.pact.consumer.dsl.PactDslJsonRootValue
+import au.com.dius.pact.model.matchingrules.MatchingRuleGroup
+import au.com.dius.pact.model.matchingrules.MaxTypeMatcher
+import au.com.dius.pact.model.matchingrules.MinTypeMatcher
+import au.com.dius.pact.model.matchingrules.NumberTypeMatcher
+import au.com.dius.pact.model.matchingrules.TypeMatcher
 import groovy.json.JsonSlurper
 import spock.lang.Specification
 
@@ -39,7 +44,7 @@ class PactDslJsonBodyMatcherSpec extends Specification {
 
   def 'each like allows the number of examples to be set'() {
     given:
-    subject = new PactDslJsonBody()
+    subject
       .eachLike('data', 2)
         .date('defDate')
         .decimalType('cost')
@@ -103,11 +108,11 @@ class PactDslJsonBodyMatcherSpec extends Specification {
     result.size() == 3
     result.keySet() == keys
     result.types == ['abc', 'abc']
-    subject.matchers == [
-      '$.body.types': [min: 0, match: 'type'],
-      '$.body.subscriptionId': [match: 'type'],
-      '$.body.types[*]': [match: 'type'],
-      '$.body.preference': [match: 'type']
+    subject.matchers.matchingRules == [
+      '.types': new MatchingRuleGroup([new MinTypeMatcher(0)]),
+      '.subscriptionId': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.types[*]': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.preference': new MatchingRuleGroup([TypeMatcher.INSTANCE])
     ]
   }
 
@@ -126,11 +131,11 @@ class PactDslJsonBodyMatcherSpec extends Specification {
     result.size() == 3
     result.keySet() == keys
     result.types == ['abc', 'abc']
-    subject.matchers == [
-      '$.body.types': [min: 2, match: 'type'],
-      '$.body.subscriptionId': [match: 'type'],
-      '$.body.types[*]': [match: 'type'],
-      '$.body.preference': [match: 'type']
+    subject.matchers.matchingRules == [
+      '.types': new MatchingRuleGroup([new MinTypeMatcher(2)]),
+      '.subscriptionId': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.types[*]': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.preference': new MatchingRuleGroup([TypeMatcher.INSTANCE])
     ]
   }
 
@@ -149,11 +154,11 @@ class PactDslJsonBodyMatcherSpec extends Specification {
     result.size() == 3
     result.keySet() == keys
     result.types == ['abc', 'abc']
-    subject.matchers == [
-      '$.body.types': [max: 10, match: 'type'],
-      '$.body.subscriptionId': [match: 'type'],
-      '$.body.types[*]': [match: 'type'],
-      '$.body.preference': [match: 'type']
+    subject.matchers.matchingRules == [
+      '.types': new MatchingRuleGroup([new MaxTypeMatcher(10)]),
+      '.subscriptionId': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.types[*]': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.preference': new MatchingRuleGroup([TypeMatcher.INSTANCE])
     ]
   }
 
@@ -188,16 +193,35 @@ class PactDslJsonBodyMatcherSpec extends Specification {
     result.size() == 2
     result.keySet() == keys
     result.features[0].geometry.coordinates[0] == [-7.55717, 49.766896]
-    subject.matchers == [
-      '$.body.type': [match: 'type'],
-      '$.body.features': [min: 0, match: 'type'],
-      '$.body.features[*].type': [match: 'type'],
-      '$.body.features[*].properties.prop0': [match: 'type'],
-      '$.body.features[*].geometry.type': [match: 'type'],
-      '$.body.features[*].geometry.coordinates': [min: 0, match: 'type'],
-      '$.body.features[*].geometry.coordinates[*][0]': [match: 'decimal'],
-      '$.body.features[*].geometry.coordinates[*][1]': [match: 'decimal']
+    subject.matchers.matchingRules == [
+      '.type': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.features': new MatchingRuleGroup([new MinTypeMatcher(0)]),
+      '.features[*].type': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.features[*].properties.prop0': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.features[*].geometry.type': new MatchingRuleGroup([TypeMatcher.INSTANCE]),
+      '.features[*].geometry.coordinates': new MatchingRuleGroup([new MinTypeMatcher(0)]),
+      '.features[*].geometry.coordinates[*][0]': new MatchingRuleGroup([
+        new NumberTypeMatcher(NumberTypeMatcher.NumberType.DECIMAL)]),
+      '.features[*].geometry.coordinates[*][1]': new MatchingRuleGroup([
+        new NumberTypeMatcher(NumberTypeMatcher.NumberType.DECIMAL)])
     ]
 
+  }
+
+  def 'each like generates the correct JSON for arrays of strings'() {
+    given:
+    subject
+      .object('dataStorePathInfo')
+        .stringMatcher('basePath', String.format('%s/%s/training-data/[a-z0-9]{20,24}', 'CUSTOMER', 'TRAINING'),
+          'CUSTOMER/TRAINING/training-data/12345678901234567890')
+        .eachLike('fileNames', PactDslJsonRootValue.stringType('abc.txt'), 1)
+      .closeObject()
+
+    when:
+    def bodyJson = subject.body.toString()
+
+    then:
+    bodyJson == '{"dataStorePathInfo":{"basePath":"CUSTOMER/TRAINING/training-data/12345678901234567890",' +
+      '"fileNames":["abc.txt"]}}'
   }
 }

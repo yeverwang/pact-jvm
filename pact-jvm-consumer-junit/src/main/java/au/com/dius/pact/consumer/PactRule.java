@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * If no host is given, it will default to localhost. If no port is given, it will default to a random port.
  *
- * @deprecated Use PactProviderRule instead
+ * @deprecated Use PactProviderRuleMk2 instead
  */
 @Deprecated
 public class PactRule extends ExternalResource {
@@ -35,17 +35,17 @@ public class PactRule extends ExternalResource {
     private final MockProviderConfig config;
 
     public PactRule(String host, int port, Object target) {
-        config = MockProviderConfig.httpConfig(host, port, PactSpecVersion.V2);
+        config = MockProviderConfig.httpConfig(host, port, PactSpecVersion.V3);
         this.target = target;
     }
 
     public PactRule(String host, Object target) {
-        config = MockProviderConfig.createDefault(host, PactSpecVersion.V2);
+        config = MockProviderConfig.createDefault(host, PactSpecVersion.V3);
         this.target = target;
     }
 
     public PactRule(Object target) {
-        config = MockProviderConfig.createDefault(PactSpecVersion.V2);
+        config = MockProviderConfig.createDefault(PactSpecVersion.V3);
         this.target = target;
     }
 

@@ -21,53 +21,53 @@ Example in a JUnit test:
 
 ```java
 import au.com.dius.pact.model.MockProviderConfig;
-import au.com.dius.pact.model.PactFragment;
+import au.com.dius.pact.model.RequestResponsePact;
+import org.apache.http.entity.ContentType;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static au.com.dius.pact.consumer.ConsumerPactRunnerKt.runConsumerTest;
 import static org.junit.Assert.assertEquals;
 
 public class PactTest {
 
-    @Test
-    public void testPact() {
-        PactFragment pactFragment = ConsumerPactBuilder
-            .consumer("Some Consumer")
-            .hasPactWith("Some Provider")
-            .uponReceiving("a request to say Hello")
-                .path("/hello")
-                .method("POST")
-                .body("{\"name\": \"harry\"}")
-            .willRespondWith()
-                .status(200)
-                .body("{\"hello\": \"harry\"}")
-                .toFragment();
+  @Test
+  public void testPact() {
+    RequestResponsePact pact = ConsumerPactBuilder
+      .consumer("Some Consumer")
+      .hasPactWith("Some Provider")
+      .uponReceiving("a request to say Hello")
+      .path("/hello")
+      .method("POST")
+      .body("{\"name\": \"harry\"}")
+      .willRespondWith()
+      .status(200)
+      .body("{\"hello\": \"harry\"}")
+      .toPact();
 
-        MockProviderConfig config = MockProviderConfig.createDefault();
-        VerificationResult result = pactFragment.runConsumer(config, new TestRun() {
-            @Override
-            public void run(MockProviderConfig config) {
-                Map expectedResponse = new HashMap();
-                expectedResponse.put("hello", "harry");
-                try {
-                    assertEquals(new ProviderClient(config.url()).hello("{\"name\": \"harry\"}"),
-                            expectedResponse);
-                } catch (IOException e) {}
-            }
-        });
+    MockProviderConfig config = MockProviderConfig.createDefault();
+    PactVerificationResult result = runConsumerTest(pact, config, new PactTestRun() {
+      @Override
+      public void run(@NotNull MockServer mockServer) throws IOException {
+        Map expectedResponse = new HashMap();
+        expectedResponse.put("hello", "harry");
+        assertEquals(expectedResponse, new ConsumerClient(mockServer.getUrl()).post("/hello",
+            "{\"name\": \"harry\"}", ContentType.APPLICATION_JSON));
+      }
+    });
 
-        if (result instanceof PactError) {
-            throw new RuntimeException(((PactError)result).error());
-        }
-
-        assertEquals(ConsumerPactTest.PACT_VERIFIED, result);
+    if (result instanceof PactVerificationResult.Error) {
+      throw new RuntimeException(((PactVerificationResult.Error)result).getError());
     }
 
-}
+    assertEquals(PactVerificationResult.Ok.INSTANCE, result);
+  }
 
+}
 ```
 
 The DSL has the following pattern:
@@ -93,7 +93,7 @@ The DSL has the following pattern:
     .
     .
     .
-.toFragment()
+.toPact()
 ```
 
 You can define as many interactions as required. Each interaction starts with `uponReceiving` followed by `willRespondWith`.
@@ -142,6 +142,10 @@ one will be generated.
 | id | Will match all numbers by type |
 | hexValue | Will match all hexadecimal encoded strings |
 | uuid | Will match strings containing UUIDs |
+| includesStr | Will match strings containing the provided string |
+| equalsTo | Will match using equals |
+| matchUrl | Defines a matcher for URLs, given the base URL path and a sequence of path fragments. The path fragments could be
+             strings or regular expression matchers |
 
 _\* Note:_ JSON only supports double precision floating point values. Depending on the language implementation, they
 may parsed as integer, floating point or decimal numbers.
@@ -165,7 +169,7 @@ For example:
         .minArrayLike("users")
             .id()
             .stringType("name")
-            .closeObject()
+        .closeObject()
         .closeArray();
 ```
 
@@ -207,7 +211,7 @@ PactDslJsonArray.arrayEachLike()
     .date("clearedDate", "mm/dd/yyyy", date)
     .stringType("status", "STATUS")
     .decimalType("amount", 100.0)
-    .closeObject()
+.closeObject()
 ```
 
 This will then match a body like:
@@ -251,13 +255,13 @@ new PactDslJsonBody()
       .eachArrayLike("coordinates") // coordinates is an array of arrays 
         .decimalType(-7.55717)
         .decimalType(49.766896)
-        .closeArray()
+      .closeArray()
       .closeArray()
     .closeObject()
     .object("properties")
       .stringType("prop0","value0")
-      .closeObject()
     .closeObject()
+  .closeObject()
   .closeArray()
 ```
 
@@ -352,4 +356,25 @@ For example:
         .status(200)
         .body("{\"hello\": \"harry\"}")
         .matchHeader("Location", ".*/hello/[0-9]+", "/hello/1234")
+```
+
+### Matching on query parameters (version 3.3.7+)
+
+You can use regular expressions to match request query parameters. The DSL has a `matchQuery` method for this. You can provide
+an example value to use when generating requests, and if you leave it out it will generate a random one
+from the regular expression.
+
+For example:
+
+```java
+  .given("test state")
+    .uponReceiving("a test interaction")
+        .path("/hello")
+        .method("POST")
+        .matchQuery("a", "\\d+", "100")
+        .matchQuery("b", "[A-Z]", "X")
+        .body("{\"name\": \"harry\"}")
+    .willRespondWith()
+        .status(200)
+        .body("{\"hello\": \"harry\"}")
 ```

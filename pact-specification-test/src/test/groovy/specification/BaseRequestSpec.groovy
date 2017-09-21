@@ -8,7 +8,7 @@ import spock.lang.Specification
 class BaseRequestSpec extends Specification {
 
   static List loadTestCases(String testDir, PactSpecVersion version) {
-    def resources = RequestSpecificationV1_1Spec.getResource(testDir)
+    def resources = BaseRequestSpec.getResource(testDir)
     def file = new File(resources.toURI())
     def result = []
     file.eachDir { d ->
@@ -26,7 +26,7 @@ class BaseRequestSpec extends Specification {
           expected.setDefaultMimeType(expected.detectContentType())
         }
         actual.setDefaultMimeType(actual.body.present ? actual.detectContentType() : 'application/json')
-        result << [d.name, json.comment, json.match, json.match ? 'should match' : 'should not match',
+        result << [d.name, f.name, json.comment, json.match, json.match ? 'should match' : 'should not match',
                    expected, actual]
       }
     }
